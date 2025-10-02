@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-use crate::{credentials::cache::TokenCache, federated_credentials_flow, TokenCredentialOptions};
+use crate::{
+    federated_credentials_flow, token_credentials::cache::TokenCache, TokenCredentialOptions,
+};
 use async_lock::{RwLock, RwLockUpgradableReadGuard};
 use azure_core::{
     auth::{AccessToken, Secret, TokenCredential},
@@ -26,7 +28,8 @@ const AZURE_FEDERATED_TOKEN: &str = "AZURE_FEDERATED_TOKEN";
 /// Enables authentication to Azure Active Directory using a client secret that was generated for an App Registration.
 ///
 /// More information on how to configure a client secret can be found here:
-/// <https://learn.microsoft.com/azure/active-directory/develop/quickstart-configure-app-access-web-apis#add-credentials-to-your-web-application>
+/// <https://docs.microsoft.com/azure/active-directory/develop/quickstart-configure-app-access-web-apis#add-credentials-to-your-web-application>
+
 #[derive(Debug)]
 pub struct WorkloadIdentityCredential {
     http_client: Arc<dyn HttpClient>,
@@ -59,9 +62,7 @@ impl WorkloadIdentityCredential {
         }
     }
 
-    pub fn create(
-        options: impl Into<TokenCredentialOptions>,
-    ) -> azure_core::Result<WorkloadIdentityCredential> {
+    pub fn create(options: impl Into<TokenCredentialOptions>) -> azure_core::Result<Self> {
         let options = options.into();
         let http_client = options.http_client();
         let authority_host = options.authority_host()?;
@@ -87,7 +88,7 @@ impl WorkloadIdentityCredential {
             .var(AZURE_FEDERATED_TOKEN)
             .map_kind(ErrorKind::Credential)
         {
-            return Ok(WorkloadIdentityCredential::new(
+            return Ok(Self::new(
                 http_client,
                 authority_host,
                 tenant_id,
@@ -100,14 +101,14 @@ impl WorkloadIdentityCredential {
             .var(AZURE_FEDERATED_TOKEN_FILE)
             .map_kind(ErrorKind::Credential)
         {
-            return Ok(Arc::new(Self {
+            return Ok(Self {
                 http_client,
                 authority_host,
                 tenant_id,
                 client_id,
                 token: Token::with_file(token_file.as_ref())?,
                 cache: TokenCache::new(),
-            }));
+            });
         }
 
         Err(Error::with_message(ErrorKind::Credential, || {
@@ -117,7 +118,7 @@ impl WorkloadIdentityCredential {
 
     async fn get_token(&self, scopes: &[&str]) -> azure_core::Result<AccessToken> {
         let token = self.token.secret().await?;
-        let res: AccessToken = federated_credentials_flow::authorize(
+        let res: AccessToken = federated_credentials_flow::perform(
             self.http_client.clone(),
             &self.client_id,
             &token,
