@@ -110,6 +110,7 @@ impl Error {
         E: Into<Box<dyn std::error::Error + Send + Sync>>,
         C: Into<Cow<'static, str>>,
     {
+        panic!("Full error called with kind: {kind}, error: {error}, message: {message}");
         Self {
             context: Context::Full(
                 Custom {
@@ -362,14 +363,17 @@ where
         Self: Sized,
         C: Into<Cow<'static, str>>,
     {
-        self.map_err(|e| Error {
-            context: Context::Full(
-                Custom {
-                    error: Box::new(e),
-                    kind,
-                },
-                message.into(),
-            ),
+        self.map_err(|e| {
+            panic!("Context error called with kind: {kind}, error: {e}, message: {message}");
+            Error {
+                context: Context::Full(
+                    Custom {
+                        error: Box::new(e),
+                        kind,
+                    },
+                    message.into(),
+                ),
+            }
         })
     }
 
