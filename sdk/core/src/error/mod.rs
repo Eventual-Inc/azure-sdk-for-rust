@@ -111,7 +111,7 @@ impl Error {
         C: Into<Cow<'static, str>>,
     {
         let error = error.into();
-        if error.to_string().contains("ConnectionReset") {
+        if format!("{error:?}").contains("ConnectionReset") {
             panic!(
                 "Full error called with kind: {}, error: {}, message: {}",
                 kind,
@@ -366,7 +366,7 @@ where
         C: Into<Cow<'static, str>>,
     {
         self.map_err(|e| {
-            if e.to_string().contains("ConnectionReset") {
+            if format!("{e:?}").contains("ConnectionReset") { {
                 panic!(
                     "Context error called with kind: {}, error: {}, message: {}",
                     kind,
