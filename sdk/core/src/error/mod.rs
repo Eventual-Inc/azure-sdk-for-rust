@@ -110,7 +110,12 @@ impl Error {
         E: Into<Box<dyn std::error::Error + Send + Sync>>,
         C: Into<Cow<'static, str>>,
     {
-        panic!("Full error called with kind: {kind:?}, error: {error:?}, message: {message:?}");
+        panic!(
+            "Full error called with kind: {}, error: {}, message: {}",
+            kind,
+            error.into(),
+            message.into()
+        );
         Self {
             context: Context::Full(
                 Custom {
@@ -364,7 +369,12 @@ where
         C: Into<Cow<'static, str>>,
     {
         self.map_err(|e| {
-            panic!("Context error called with kind: {kind:?}, error: {e:?}, message: {message:?}");
+            panic!(
+                "Context error called with kind: {}, error: {}, message: {}",
+                kind,
+                e,
+                message.into()
+            );
             Error {
                 context: Context::Full(
                     Custom {
