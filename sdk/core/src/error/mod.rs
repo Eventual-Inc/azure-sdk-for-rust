@@ -110,7 +110,7 @@ impl Error {
         E: Into<Box<dyn std::error::Error + Send + Sync>>,
         C: Into<Cow<'static, str>>,
     {
-        if e.into().to_string().contains("ConnectionReset") {
+        if error.into().to_string().contains("ConnectionReset") {
             panic!(
                 "Full error called with kind: {}, error: {}, message: {}",
                 kind,
