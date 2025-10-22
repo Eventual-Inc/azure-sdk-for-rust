@@ -366,7 +366,7 @@ where
         C: Into<Cow<'static, str>>,
     {
         self.map_err(|e| {
-            if format!("{e:?}").contains("ConnectionReset") { {
+            if format!("{e:?}").contains("ConnectionReset") {
                 panic!(
                     "Context error called with kind: {}, error: {}, message: {}",
                     kind,
